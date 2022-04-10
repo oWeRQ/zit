@@ -50,4 +50,17 @@ class Console
 	{
 		$this->zit->commit($message);
 	}
+
+	public function branch($branch = null)
+	{
+		if ($branch)
+			$this->zit->branch($branch);
+		else
+			$this->print($this->zit->listBranches());
+	}
+
+	public function checkout($branch)
+	{
+		$this->zit->checkout($branch);
+	}
 }

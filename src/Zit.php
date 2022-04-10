@@ -74,6 +74,9 @@ class Zit
 	public function head()
 	{
 		$ref = $this->headRef();
+		if (!str_starts_with($ref, 'refs/'))
+			return $ref;
+		
 		return $this->zip->getFromName(".zit/$ref") ?: sha1('');
 	}
 
@@ -157,6 +160,8 @@ class Zit
 		}
 
 		return [
+			'commit' => $this->head(),
+			'ref' => $this->headRef(),
 			'deleted' => $deleted,
 			'staged' => $staged,
 			'changed' => $changed,
@@ -177,6 +182,20 @@ class Zit
 		return $commits;
 	}
 
+	public function listBranches()
+	{
+		$branches = [];
+
+		for ($i = 0; $i < $this->zip->numFiles; $i++) {
+			$name = $this->zip->getNameIndex($i);
+			if (str_starts_with($name, '.zit/refs/heads/')) {
+				$branches[] = basename($name);
+			}
+		}
+
+		return $branches;
+	}
+
 	public function commit($message)
 	{
 		$files = $this->indexTree();
@@ -195,6 +214,19 @@ class Zit
 		]);
 		$this->storeHead($commitHash);
 		echo "commit $commitHash\n";
+	}
+
+	public function branch($branch)
+	{
+		$hash = $this->head();
+		$ref = "refs/heads/$branch";
+		$this->zip->addFromString(".zit/$ref", $hash);
+		$this->zip->addFromString(".zit/HEAD", $ref);
+	}
+
+	public function checkout($branch)
+	{
+		
 	}
 
 	protected function storeHead($hash)
@@ -222,16 +254,9 @@ class Zit
 		$this->zip->addFromString($to, $this->zip->getFromName($from));
 	}
 
-	protected function headPath($name)
-	{
-		return '.zit/refs/heads/'.$name;
-	}
-
 	protected function objectPath($hash)
 	{
-		$dir = '.zit/objects/'.substr($hash, 0, 2);
-		$name = substr($hash, 2);
-		return "$dir/$name";
+		return '.zit/objects/'.substr($hash, 0, 2).'/'.substr($hash, 2);
 	}
 
 	protected function isIgnoreFile($name)
