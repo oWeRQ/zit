@@ -40,4 +40,14 @@ class Console
 	{
 		$this->print($this->zit->status());
 	}
+
+	public function log()
+	{
+		$this->print($this->zit->log());
+	}
+
+	public function commit($message)
+	{
+		$this->zit->commit($message);
+	}
 }
