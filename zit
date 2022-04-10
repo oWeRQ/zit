@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+namespace Zit;
+
+require __DIR__.'/src/Zit.php';
+require __DIR__.'/src/Console.php';
+
+$zit = Zit::path(getcwd());
+$console = new Console($zit);
+if ($argc === 1) {
+	$console->usage();
+} else {
+	call_user_func_array([$console, $argv[1]], array_slice($argv, 2));
+}
