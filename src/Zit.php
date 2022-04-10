@@ -77,12 +77,12 @@ class Zit
 		if (!str_starts_with($ref, 'refs/'))
 			return $ref;
 		
-		return $this->zip->getFromName(".zit/$ref") ?: sha1('');
+		return $this->readZit($ref) ?: sha1('');
 	}
 
 	public function headRef()
 	{
-		return $this->zip->getFromName('.zit/HEAD') ?: 'refs/heads/master';
+		return $this->readZit('HEAD') ?: 'refs/heads/master';
 	}
 
 	public function headCommit()
@@ -186,10 +186,12 @@ class Zit
 	{
 		$branches = [];
 
+		$dir = '.zit/refs/heads/';
+		$trim = strlen($dir);
 		for ($i = 0; $i < $this->zip->numFiles; $i++) {
 			$name = $this->zip->getNameIndex($i);
-			if (str_starts_with($name, '.zit/refs/heads/')) {
-				$branches[] = basename($name);
+			if (str_starts_with($name, $dir)) {
+				$branches[substr($name, $trim)] = $this->read($name);
 			}
 		}
 
@@ -220,24 +222,38 @@ class Zit
 	{
 		$hash = $this->head();
 		$ref = "refs/heads/$branch";
-		$this->zip->addFromString(".zit/$ref", $hash);
-		$this->zip->addFromString(".zit/HEAD", $ref);
+		$this->storeZit($ref, $hash);
+		$this->storeZit('HEAD', $ref);
+		echo "ref $ref\n";
 	}
 
 	public function checkout($branch)
 	{
+		$ref = "refs/heads/$branch";
+		$hash = $this->readZit($ref);
+		$commit = $this->readJson($hash);
+		$files = $this->readJson($commit['tree']);
+		$workTree = $this->workTree();
 		
+		foreach ($files as $name => $hash) {
+			if (!array_key_exists($name, $workTree) || $workTree[$name] !== $hash) {
+				echo "checkout '$name'\n";
+				file_put_contents($name, $this->read($this->objectPath($hash)));
+			}
+		}
+
+		$this->storeZit('HEAD', $ref);
 	}
 
 	protected function storeHead($hash)
 	{
 		$ref = $this->headRef();
-		$this->zip->addFromString(".zit/$ref", $hash);
+		$this->storeZit($ref, $hash);
 	}
 
 	protected function readJson($hash)
 	{
-		$json = $this->zip->getFromName($this->objectPath($hash)) ?: '{}';
+		$json = $this->read($this->objectPath($hash)) ?: '{}';
 		return json_decode($json, true);
 	}
 
@@ -245,13 +261,33 @@ class Zit
 	{
 		$json = json_encode($data);
 		$hash = sha1($json);
-		$this->zip->addFromString($this->objectPath($hash), $json);
+		$this->store($this->objectPath($hash), $json);
 		return $hash;
 	}
 
 	protected function copy($from, $to)
 	{
-		$this->zip->addFromString($to, $this->zip->getFromName($from));
+		return $this->store($to, $this->read($from));
+	}
+
+	protected function read($name)
+	{
+		return $this->zip->getFromName($name);
+	}
+
+	protected function store($name, $content)
+	{
+		return $this->zip->addFromString($name, $content);
+	}
+
+	protected function readZit($name)
+	{
+		return $this->read(".zit/$name");
+	}
+
+	protected function storeZit($name, $content)
+	{
+		return $this->store(".zit/$name", $content);
 	}
 
 	protected function objectPath($hash)
