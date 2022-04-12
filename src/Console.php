@@ -32,10 +32,9 @@ class Console
 			preg_match('/ \* (.*)/u', $method->getDocComment(), $match);
 			$comment = $match ? $match[1] : '';
 			$command = $method->name.implode(array_map(function($param) {
-				$name = $param->name.($param->isVariadic() ? '...' : '');
-				return $param->isOptional() ? " [$name]" : " <$name>";
+				return ($param->isDefaultValueAvailable() ? " [{$param->name}]" : " <{$param->name}>").($param->isVariadic() ? '...' : '');
 			}, $method->getParameters()));
-			echo "  ".str_pad($command, 16)."  $comment\n";
+			echo "  ".str_pad($command, 20)."  $comment\n";
 		}
 	}
 
@@ -61,6 +60,14 @@ class Console
 	public function rm(...$files)
 	{
 		$this->zit->deleteFiles($files);
+	}
+
+	/**
+	 * Restore working tree files
+	 */
+	public function restore(...$files)
+	{
+		$this->zit->restoreFiles($files);
 	}
 
 	/**

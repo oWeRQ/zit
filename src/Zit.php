@@ -71,6 +71,17 @@ class Zit
 		}
 	}
 
+	public function restoreFiles($names)
+	{
+		$headTree = $this->headTree();
+		foreach ($names as $name) {
+			if (array_key_exists($name, $headTree)) {
+				echo "restore $name\n";
+				file_put_contents($name, $this->read($this->objectPath($headTree[$name])));
+			}
+		}
+	}
+
 	public function head()
 	{
 		$ref = $this->headRef();
