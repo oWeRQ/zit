@@ -76,7 +76,7 @@ class Zit
 		$ref = $this->headRef();
 		if (!str_starts_with($ref, 'refs/'))
 			return $ref;
-		
+
 		return $this->readZit($ref) ?: sha1('');
 	}
 
@@ -227,22 +227,40 @@ class Zit
 		echo "ref $ref\n";
 	}
 
-	public function checkout($branch)
+	public function switch($branch)
 	{
 		$ref = "refs/heads/$branch";
 		$hash = $this->readZit($ref);
 		$commit = $this->readJson($hash);
-		$files = $this->readJson($commit['tree']);
+		$commitTree = $this->readJson($commit['tree']);
 		$workTree = $this->workTree();
-		
-		foreach ($files as $name => $hash) {
+
+		foreach ($commitTree as $name => $hash) {
 			if (!array_key_exists($name, $workTree) || $workTree[$name] !== $hash) {
-				echo "checkout '$name'\n";
+				echo "update '$name'\n";
 				file_put_contents($name, $this->read($this->objectPath($hash)));
 			}
 		}
 
 		$this->storeZit('HEAD', $ref);
+	}
+
+	public function reset()
+	{
+		$headTree = $this->headTree();
+		$indexTree = $this->indexTree();
+
+		foreach ($headTree as $name => $hash) {
+			if (!array_key_exists($name, $indexTree) || $indexTree[$name] !== $hash) {
+				$this->copy($this->objectPath($hash), $name);
+			}
+		}
+
+		foreach ($indexTree as $name => $hash) {
+			if (!array_key_exists($name, $headTree)) {
+				$this->zip->deleteName($name);
+			}
+		}
 	}
 
 	protected function storeHead($hash)
