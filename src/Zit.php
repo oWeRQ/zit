@@ -6,7 +6,6 @@ class Zit
 {
 	protected $store;
 	protected $workCopy;
-	protected $author;
 
 	public function getStoreFile()
 	{
@@ -23,11 +22,10 @@ class Zit
 		return $this->store->getZip();
 	}
 
-	public function __construct($store, $workCopy, $author = null)
+	public function __construct($store, $workCopy)
 	{
 		$this->store = $store;
 		$this->workCopy = $workCopy;
-		$this->author = $author;
 	}
 
 	public function init()
@@ -164,7 +162,7 @@ class Zit
 		return $branches;
 	}
 
-	public function commit($message)
+	public function commit($message, $author)
 	{
 		$files = $this->store->indexTree();
 
@@ -175,7 +173,7 @@ class Zit
 		$treeHash = $this->store->writeJson($files);
 		$commitHash = $this->store->writeJson([
 			'date' => date('c'),
-			'author' => $this->author,
+			'author' => $author,
 			'message' => $message,
 			'tree' => $treeHash,
 			'parents' => [$this->readHead()],

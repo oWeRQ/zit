@@ -5,10 +5,12 @@ namespace Zit;
 class Console
 {
 	protected $zit;
+	protected $author;
 
-	public function __construct(Zit $zit)
+	public function __construct(Zit $zit, $author = null)
 	{
 		$this->zit = $zit;
+		$this->author = $author;
 	}
 
 	protected function print($data)
@@ -110,7 +112,7 @@ class Console
 	 */
 	public function commit($message)
 	{
-		$this->zit->commit($message);
+		$this->zit->commit($message, $this->author);
 	}
 
 	/**

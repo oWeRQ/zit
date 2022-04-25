@@ -11,8 +11,8 @@ require __DIR__.'/src/WorkCopy.php';
 $author = getenv('USER').'@'.gethostname();
 $workCopy = WorkCopy::path(getcwd());
 $store = new Store($workCopy->getStoreFile());
-$zit = new Zit($store, $workCopy, $author);
-$console = new Console($zit);
+$zit = new Zit($store, $workCopy);
+$console = new Console($zit, $author);
 if ($argc === 1) {
 	$console->usage();
 } else {
