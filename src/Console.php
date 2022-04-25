@@ -13,6 +13,22 @@ class Console
 
 	protected function print($data)
 	{
+		foreach ($data as $name => $values) {
+			if ($values) {
+				if (is_array($values)) {
+					echo "$name:\n";
+					foreach ((array)$values as $value) {
+						echo "  $value\n";
+					}
+				} else {
+					echo "$name: $values\n";
+				}
+			}
+		}
+	}
+
+	protected function printJson($data)
+	{
 		echo json_encode($data,  JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n";
 	}
 
@@ -75,14 +91,7 @@ class Console
 	 */
 	public function status()
 	{
-		foreach ($this->zit->status() as $name => $values) {
-			if ($values) {
-				echo "$name:\n";
-				foreach ((array)$values as $value) {
-					echo "  $value\n";
-				}
-			}
-		}
+		$this->print($this->zit->status());
 	}
 
 	/**
@@ -90,7 +99,10 @@ class Console
 	 */
 	public function log()
 	{
-		$this->print($this->zit->log());
+		foreach ($this->zit->log() as $commit) {
+			$this->print($commit);
+			echo "\n";
+		}
 	}
 
 	/**
