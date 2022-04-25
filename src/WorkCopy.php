@@ -66,6 +66,11 @@ class WorkCopy
 		return file_put_contents($name, $content);
 	}
 
+	public function delete($name)
+	{
+		return unlink($name);
+	}
+
 	public function isIgnoreFile($name)
 	{
 		if (str_starts_with($name, '.git/'))

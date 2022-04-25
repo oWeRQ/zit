@@ -7,16 +7,6 @@ class Zit
 	protected $store;
 	protected $workCopy;
 
-	public function getStoreFile()
-	{
-		return $this->store->getStoreFile();
-	}
-
-	public function getWorkDir()
-	{
-		return $this->workCopy->getWorkDir();
-	}
-
 	public function getZip()
 	{
 		return $this->store->getZip();
@@ -214,16 +204,20 @@ class Zit
 		$headTree = $this->headTree();
 		$indexTree = $this->store->indexTree();
 
+		$indexReset = [];
 		foreach ($headTree as $name => $hash) {
 			if (!array_key_exists($name, $indexTree) || $indexTree[$name] !== $hash) {
-				$this->store->writeIndex($name, $this->store->readObject($hash));
+				$indexReset[$name] = $hash;
 			}
 		}
+		$this->store->indexReset($indexReset);
 
+		$indexDelete = [];
 		foreach ($indexTree as $name => $hash) {
 			if (!array_key_exists($name, $headTree)) {
-				$this->getZip()->deleteName($name);
+				$indexDelete[] = $name;
 			}
 		}
+		$this->store->indexDelete($indexDelete);
 	}
 }

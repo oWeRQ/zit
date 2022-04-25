@@ -52,6 +52,13 @@ class Store
 		}
 	}
 
+	public function indexReset($files)
+	{
+		foreach ($files as $name => $hash) {
+			$this->writeIndex($name, $this->readObject($hash));
+		}
+	}
+
 	public function indexTree()
 	{
 		$files = [];
@@ -113,16 +120,16 @@ class Store
 
 	public function readObject($hash)
 	{
-		return $this->read($this->objectPath($hash));
+		return $this->readZit($this->objectPath($hash));
 	}
 
 	public function writeObject($hash, $content)
 	{
-		return $this->write($this->objectPath($hash), $content);
+		return $this->writeZit($this->objectPath($hash), $content);
 	}
 
 	public function objectPath($hash)
 	{
-		return '.zit/objects/'.substr($hash, 0, 2).'/'.substr($hash, 2);
+		return 'objects/'.substr($hash, 0, 2).'/'.substr($hash, 2);
 	}
 }
