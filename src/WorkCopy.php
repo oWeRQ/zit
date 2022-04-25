@@ -9,24 +9,26 @@ class WorkCopy
 {
 	protected $storeFile;
 	protected $workDir;
+	protected $currentDir;
 
-	public static function path($path, $file = '.zit.zip')
+	public static function path($currentDir, $file = '.zit.zip')
 	{
-		$dir = $path;
+		$dir = $currentDir;
 		while (!file_exists("$dir/$file")) {
 			$dir = dirname($dir);
 			if ($dir === '/') {
-				$dir = $path;
+				$dir = $currentDir;
 				break;
 			}
 		}
-		return new static("$dir/$file");
+		return new static("$dir/$file", $currentDir);
 	}
 
-	public function __construct($storeFile)
+	public function __construct($storeFile, $currentDir = null)
 	{
-		$this->storeFile = $storeFile;
+		$this->storeFile = realpath($storeFile);
 		$this->workDir = dirname($storeFile);
+		$this->currentDir = $currentDir ?: $this->workDir;
 	}
 
 	public function getStoreFile()
@@ -34,17 +36,17 @@ class WorkCopy
 		return $this->storeFile;
 	}
 
-	public function getWorkDir()
+	public function workTree($name = null)
 	{
-		return $this->workDir;
-	}
+		$path = $this->realpath($name);
+		if (!is_dir($path)) {
+			return [$name => sha1_file($path)];
+		}
 
-	public function workTree()
-	{
 		$files = [];
 
 		$trim = strlen($this->workDir) + 1;
-		$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->workDir));
+		$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
 		foreach ($rii as $file) {
 			$name = substr($file->getPathname(), $trim);
 			if (!$file->isDir() && !$this->isIgnoreFile($name)) {
@@ -56,19 +58,32 @@ class WorkCopy
 		return $files;
 	}
 
+	public function normalizePath($path)
+	{
+		$realpath = realpath($this->currentDir.'/'.$path);
+		if (str_starts_with($realpath, $this->workDir)) {
+			return substr($realpath, strlen($this->workDir) + 1);
+		}
+	}
+
+	public function realpath($name)
+	{
+		return $this->workDir.'/'.$name;
+	}
+
 	public function read($name)
 	{
-		return file_get_contents($name);
+		return file_get_contents($this->realpath($name));
 	}
 
 	public function write($name, $content)
 	{
-		return file_put_contents($name, $content);
+		return file_put_contents($this->realpath($name), $content);
 	}
 
 	public function delete($name)
 	{
-		return unlink($name);
+		return unlink($this->realpath($name));
 	}
 
 	public function isIgnoreFile($name)
@@ -80,11 +95,5 @@ class WorkCopy
 			return true;
 
 		return false;
-	}
-
-	public function dir($path)
-	{
-		$path = rtrim($path, '/');
-		return array_map(fn($name) => ($path === '.' ? $name : "$path/$name"), array_slice(scandir($path), 2));
 	}
 }

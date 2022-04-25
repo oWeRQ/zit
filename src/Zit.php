@@ -18,14 +18,16 @@ class Zit
 		$this->store->init();
 	}
 
-	public function addFiles($names)
+	public function addFiles($paths)
 	{
-		foreach ($names as $name) {
-			if (is_dir($name)) {
-				$this->addFiles($this->workCopy->dir($name));
-			} elseif (!$this->workCopy->isIgnoreFile($name)) {
-				echo "add '$name'\n";
-				$this->store->writeIndex($name, $this->workCopy->read($name));
+		$indexTree = $this->store->indexTree();
+		foreach ($paths as $path) {
+			$path = $this->workCopy->normalizePath($path);
+			foreach ($this->workCopy->workTree($path) as $name => $hash) {
+				if (!array_key_exists($name, $indexTree) || $indexTree[$name] !== $hash) {
+					echo "add '$name'\n";
+					$this->store->writeIndex($name, $this->workCopy->read($name));
+				}
 			}
 		}
 	}
