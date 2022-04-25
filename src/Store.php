@@ -9,21 +9,11 @@ class Store
 	protected $storeFile;
 	protected $zip;
 
-	public function getStoreFile()
-	{
-		return $this->storeFile;
-	}
-
-	public function getZip()
-	{
-		return $this->zip;
-	}
-
 	public function __construct($storeFile)
 	{
 		$this->storeFile = $storeFile;
 		$this->zip = new ZipArchive;
-		$this->zip->open($this->getStoreFile());
+		$this->zip->open($this->storeFile);
 	}
 
 	public function __destruct()
@@ -36,27 +26,13 @@ class Store
 	public function reload()
 	{
 		$this->zip->close();
-		$this->zip->open($this->getStoreFile());
+		$this->zip->open($this->storeFile);
 	}
 
 	public function init()
 	{
-		$this->zip->open($this->getStoreFile(), ZipArchive::CREATE);
+		$this->zip->open($this->storeFile, ZipArchive::CREATE);
 		$this->zip->addEmptyDir('.zit');
-	}
-
-	public function indexDelete($files)
-	{
-		foreach ($files as $file) {
-			$this->zip->deleteName($file);
-		}
-	}
-
-	public function indexReset($files)
-	{
-		foreach ($files as $name => $hash) {
-			$this->writeIndex($name, $this->readObject($hash));
-		}
 	}
 
 	public function indexTree()
@@ -72,6 +48,53 @@ class Store
 
 		ksort($files);
 		return $files;
+	}
+
+	public function headTree()
+	{
+		$commit = $this->readJson($this->readHeadHash());
+		return $commit ? $this->readJson($commit['tree']) : [];
+	}
+
+	public function readHeadRef()
+	{
+		return $this->readZit('HEAD') ?: 'refs/heads/master';
+	}
+
+	public function writeHeadRef($ref)
+	{
+		return $this->writeZit('HEAD', $ref);
+	}
+
+	public function readHeadHash()
+	{
+		$ref = $this->readHeadRef();
+		if (!str_starts_with($ref, 'refs/'))
+			return $ref;
+
+		return $this->readZit($ref) ?: sha1('');
+	}
+
+	public function writeHeadHash($hash)
+	{
+		$ref = $this->readHeadRef();
+		$this->writeZit($ref, $hash);
+	}
+
+	public function listBranches()
+	{
+		$branches = [];
+
+		$dir = '.zit/refs/heads/';
+		$trim = strlen($dir);
+		for ($i = 0; $i < $this->zip->numFiles; $i++) {
+			$name = $this->zip->getNameIndex($i);
+			if (str_starts_with($name, $dir)) {
+				$branches[substr($name, $trim)] = $this->read($name);
+			}
+		}
+
+		return $branches;
 	}
 
 	public function read($name)
@@ -92,6 +115,16 @@ class Store
 	public function writeIndex($name, $content)
 	{
 		return $this->write($name, $content);
+	}
+
+	public function deleteIndex($name)
+	{
+		return $this->zip->deleteName($name);
+	}
+
+	public function resetIndex($name, $hash)
+	{
+		$this->writeIndex($name, $this->readObject($hash));
 	}
 
 	public function readZit($name)

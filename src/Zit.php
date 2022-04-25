@@ -7,11 +7,6 @@ class Zit
 	protected $store;
 	protected $workCopy;
 
-	public function getZip()
-	{
-		return $this->store->getZip();
-	}
-
 	public function __construct($store, $workCopy)
 	{
 		$this->store = $store;
@@ -23,63 +18,35 @@ class Zit
 		$this->store->init();
 	}
 
-	public function addFiles($paths)
+	public function addFiles($names)
 	{
-		foreach ($paths as $path) {
-			if (is_dir($path)) {
-				$this->addFiles($this->workCopy->dir($path));
-			} elseif (!$this->workCopy->isIgnoreFile($path)) {
-				echo "add '$path'\n";
-				$this->getZip()->addFile($path);
+		foreach ($names as $name) {
+			if (is_dir($name)) {
+				$this->addFiles($this->workCopy->dir($name));
+			} elseif (!$this->workCopy->isIgnoreFile($name)) {
+				echo "add '$name'\n";
+				$this->store->writeIndex($name, $this->workCopy->read($name));
 			}
 		}
 	}
 
-	public function deleteFiles($files)
+	public function deleteFiles($names)
 	{
-		$this->store->indexDelete($files);
+		foreach ($names as $name) {
+			echo "delete '$name'\n";
+			$this->store->indexDelete($name);
+		}
 	}
 
 	public function restoreFiles($names)
 	{
-		$headTree = $this->headTree();
+		$headTree = $this->store->headTree();
 		foreach ($names as $name) {
 			if (array_key_exists($name, $headTree)) {
 				echo "restore $name\n";
 				$this->workCopy->write($name, $this->store->readObject($headTree[$name]));
 			}
 		}
-	}
-
-	public function readHead()
-	{
-		$ref = $this->headRef();
-		if (!str_starts_with($ref, 'refs/'))
-			return $ref;
-
-		return $this->store->readZit($ref) ?: sha1('');
-	}
-
-	public function writeHead($hash)
-	{
-		$ref = $this->headRef();
-		$this->store->writeZit($ref, $hash);
-	}
-
-	public function headRef()
-	{
-		return $this->store->readZit('HEAD') ?: 'refs/heads/master';
-	}
-
-	public function headCommit()
-	{
-		return $this->store->readJson($this->readHead());
-	}
-
-	public function headTree()
-	{
-		$commit = $this->headCommit();
-		return $commit ? $this->store->readJson($commit['tree']) : [];
 	}
 
 	public function status()
@@ -89,7 +56,7 @@ class Zit
 		$changed = [];
 		$untracked = [];
 
-		$headTree = $this->headTree();
+		$headTree = $this->store->headTree();
 		$indexTree = $this->store->indexTree();
 		$workTree = $this->workCopy->workTree();
 
@@ -114,8 +81,8 @@ class Zit
 		}
 
 		return [
-			'commit' => $this->readHead(),
-			'ref' => $this->headRef(),
+			'commit' => $this->store->readHeadHash(),
+			'ref' => $this->store->readHeadRef(),
 			'deleted' => $deleted,
 			'staged' => $staged,
 			'changed' => $changed,
@@ -127,7 +94,7 @@ class Zit
 	{
 		$commits = [];
 
-		$current = $this->headCommit();
+		$current = $this->store->readJson($this->store->readHeadHash());
 		while ($current) {
 			$commits[] = $current;
 			$current = $this->store->readJson($current['parents'][0]);
@@ -138,18 +105,7 @@ class Zit
 
 	public function listBranches()
 	{
-		$branches = [];
-
-		$dir = '.zit/refs/heads/';
-		$trim = strlen($dir);
-		for ($i = 0; $i < $this->getZip()->numFiles; $i++) {
-			$name = $this->getZip()->getNameIndex($i);
-			if (str_starts_with($name, $dir)) {
-				$branches[substr($name, $trim)] = $this->store->read($name);
-			}
-		}
-
-		return $branches;
+		return $this->store->listBranches();
 	}
 
 	public function commit($message, $author)
@@ -166,18 +122,18 @@ class Zit
 			'author' => $author,
 			'message' => $message,
 			'tree' => $treeHash,
-			'parents' => [$this->readHead()],
+			'parents' => [$this->store->readHeadHash()],
 		]);
-		$this->writeHead($commitHash);
+		$this->store->writeHeadHash($commitHash);
 		echo "commit $commitHash\n";
 	}
 
 	public function branch($branch)
 	{
-		$hash = $this->readHead();
+		$hash = $this->store->readHeadHash();
 		$ref = "refs/heads/$branch";
 		$this->store->writeZit($ref, $hash);
-		$this->store->writeZit('HEAD', $ref);
+		$this->store->writeHeadRef($ref);
 		echo "ref $ref\n";
 	}
 
@@ -196,28 +152,24 @@ class Zit
 			}
 		}
 
-		$this->store->writeZit('HEAD', $ref);
+		$this->store->writeHeadRef($ref);
 	}
 
 	public function reset()
 	{
-		$headTree = $this->headTree();
+		$headTree = $this->store->headTree();
 		$indexTree = $this->store->indexTree();
 
-		$indexReset = [];
 		foreach ($headTree as $name => $hash) {
 			if (!array_key_exists($name, $indexTree) || $indexTree[$name] !== $hash) {
-				$indexReset[$name] = $hash;
+				$this->store->resetIndex($name, $hash);
 			}
 		}
-		$this->store->indexReset($indexReset);
 
-		$indexDelete = [];
 		foreach ($indexTree as $name => $hash) {
 			if (!array_key_exists($name, $headTree)) {
-				$indexDelete[] = $name;
+				$this->store->deleteIndex($name);
 			}
 		}
-		$this->store->indexDelete($indexDelete);
 	}
 }

@@ -43,8 +43,8 @@ class WorkCopy
 	{
 		$files = [];
 
-		$trim = strlen($this->getWorkDir()) + 1;
-		$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->getWorkDir()));
+		$trim = strlen($this->workDir) + 1;
+		$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->workDir));
 		foreach ($rii as $file) {
 			$name = substr($file->getPathname(), $trim);
 			if (!$file->isDir() && !$this->isIgnoreFile($name)) {
