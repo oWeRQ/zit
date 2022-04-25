@@ -7,7 +7,12 @@ class Zit
 	protected $store;
 	protected $workCopy;
 
-	public function __construct($store, $workCopy)
+	public function output($message)
+	{
+		echo "$message\n";
+	}
+
+	public function __construct(Store $store, WorkCopy $workCopy)
 	{
 		$this->store = $store;
 		$this->workCopy = $workCopy;
@@ -25,28 +30,30 @@ class Zit
 			$path = $this->workCopy->normalizePath($path);
 			foreach ($this->workCopy->workTree($path) as $name => $hash) {
 				if (!array_key_exists($name, $indexTree) || $indexTree[$name] !== $hash) {
-					echo "add '$name'\n";
 					$this->store->writeIndex($name, $this->workCopy->read($name));
+					$this->output("add '$name'");
 				}
 			}
 		}
 	}
 
-	public function deleteFiles($names)
+	public function deleteFiles($paths)
 	{
-		foreach ($names as $name) {
-			echo "delete '$name'\n";
-			$this->store->indexDelete($name);
+		foreach ($paths as $path) {
+			$name = $this->workCopy->normalizePath($path);
+			$this->store->deleteIndex($name);
+			$this->output("delete '$name'");
 		}
 	}
 
-	public function restoreFiles($names)
+	public function restoreFiles($paths)
 	{
 		$headTree = $this->store->headTree();
-		foreach ($names as $name) {
+		foreach ($paths as $path) {
+			$name = $this->workCopy->normalizePath($path);
 			if (array_key_exists($name, $headTree)) {
-				echo "restore $name\n";
 				$this->workCopy->write($name, $this->store->readObject($headTree[$name]));
+				$this->output("restore '$name'");
 			}
 		}
 	}
@@ -127,7 +134,7 @@ class Zit
 			'parents' => [$this->store->readHeadHash()],
 		]);
 		$this->store->writeHeadHash($commitHash);
-		echo "commit $commitHash\n";
+		$this->output("commit $commitHash");
 	}
 
 	public function branch($branch)
@@ -145,8 +152,8 @@ class Zit
 
 		foreach ($commitTree as $name => $hash) {
 			if (!array_key_exists($name, $workTree) || $workTree[$name] !== $hash) {
-				echo "update '$name'\n";
 				$this->workCopy->write($name, $this->store->readObject($hash));
+				$this->output("update '$name'");
 			}
 		}
 
@@ -161,12 +168,14 @@ class Zit
 		foreach ($headTree as $name => $hash) {
 			if (!array_key_exists($name, $indexTree) || $indexTree[$name] !== $hash) {
 				$this->store->resetIndex($name, $hash);
+				$this->output("reset index '$name'");
 			}
 		}
 
 		foreach ($indexTree as $name => $hash) {
 			if (!array_key_exists($name, $headTree)) {
 				$this->store->deleteIndex($name);
+				$this->output("delete index '$name'");
 			}
 		}
 	}
