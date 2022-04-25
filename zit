@@ -8,9 +8,10 @@ require __DIR__.'/src/Console.php';
 require __DIR__.'/src/Store.php';
 require __DIR__.'/src/WorkCopy.php';
 
+$author = getenv('USER').'@'.gethostname();
 $workCopy = WorkCopy::path(getcwd());
 $store = new Store($workCopy->getStoreFile());
-$zit = new Zit($store, $workCopy);
+$zit = new Zit($store, $workCopy, $author);
 $console = new Console($zit);
 if ($argc === 1) {
 	$console->usage();
