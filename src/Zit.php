@@ -130,18 +130,14 @@ class Zit
 
 	public function branch($branch)
 	{
-		$hash = $this->store->readHeadHash();
-		$ref = "refs/heads/$branch";
-		$this->store->writeZit($ref, $hash);
-		$this->store->writeHeadRef($ref);
-		echo "ref $ref\n";
+		$this->store->writeBranch($branch, $this->store->readHeadHash());
+		$this->store->writeHeadBranch($branch);
 	}
 
 	public function switch($branch)
 	{
-		$ref = "refs/heads/$branch";
-		$hash = $this->store->readZit($ref);
-		$commit = $this->store->readJson($hash);
+		$commitHash = $this->store->readBranch($branch);
+		$commit = $this->store->readJson($commitHash);
 		$commitTree = $this->store->readJson($commit['tree']);
 		$workTree = $this->workCopy->workTree();
 
@@ -152,7 +148,7 @@ class Zit
 			}
 		}
 
-		$this->store->writeHeadRef($ref);
+		$this->store->writeHeadBranch($branch);
 	}
 
 	public function reset()

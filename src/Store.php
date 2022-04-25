@@ -58,12 +58,17 @@ class Store
 
 	public function readHeadRef()
 	{
-		return $this->readZit('HEAD') ?: 'refs/heads/master';
+		return $this->readZit('HEAD') ?: $this->branchPath('master');
 	}
 
 	public function writeHeadRef($ref)
 	{
 		return $this->writeZit('HEAD', $ref);
+	}
+
+	public function writeHeadBranch($branch)
+	{
+		return $this->writeHeadRef($this->branchPath($branch));
 	}
 
 	public function readHeadHash()
@@ -124,7 +129,7 @@ class Store
 
 	public function resetIndex($name, $hash)
 	{
-		$this->writeIndex($name, $this->readObject($hash));
+		return $this->writeIndex($name, $this->readObject($hash));
 	}
 
 	public function readZit($name)
@@ -164,5 +169,20 @@ class Store
 	public function objectPath($hash)
 	{
 		return 'objects/'.substr($hash, 0, 2).'/'.substr($hash, 2);
+	}
+
+	public function readBranch($branch)
+	{
+		return $this->readZit($this->branchPath($branch));
+	}
+
+	public function writeBranch($branch, $hash)
+	{
+		return $this->writeZit($this->branchPath($branch), $hash);
+	}
+
+	public function branchPath($branch)
+	{
+		return "refs/heads/$branch";
 	}
 }
