@@ -8,29 +8,26 @@ use RecursiveDirectoryIterator;
 
 class Zit
 {
-	protected $storeFile;
-	protected $workDir;
+	protected $store;
+	protected $workCopy;
 	protected $zip;
 
-	public static function path($path, $file = '.zit.zip')
+	public function __construct($store, $workCopy)
 	{
-		$dir = $path;
-		while (!file_exists("$dir/$file")) {
-			$dir = dirname($dir);
-			if ($dir === '/') {
-				$dir = $path;
-				break;
-			}
-		}
-		return new Zit("$dir/$file");
+		$this->store = $store;
+		$this->workCopy = $workCopy;
+		$this->zip = new ZipArchive;
+		$this->zip->open($this->getStoreFile());
 	}
 
-	public function __construct($storeFile)
+	public function getStoreFile()
 	{
-		$this->storeFile = $storeFile;
-		$this->workDir = dirname($storeFile);
-		$this->zip = new ZipArchive;
-		$this->zip->open($this->storeFile);
+		return $this->store->getStoreFile();
+	}
+
+	public function getWorkDir()
+	{
+		return $this->workCopy->getWorkDir();
 	}
 
 	public function __destruct()
@@ -43,12 +40,12 @@ class Zit
 	public function reload()
 	{
 		$this->zip->close();
-		$this->zip->open($this->storeFile);
+		$this->zip->open($this->getStoreFile());
 	}
 
 	public function init()
 	{
-		$this->zip->open($this->storeFile, ZipArchive::CREATE);
+		$this->zip->open($this->getStoreFile(), ZipArchive::CREATE);
 		$this->zip->addEmptyDir('.zit');
 	}
 
@@ -126,8 +123,8 @@ class Zit
 	{
 		$files = [];
 
-		$trim = strlen($this->workDir) + 1;
-		$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->workDir));
+		$trim = strlen($this->getWorkDir()) + 1;
+		$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($this->getWorkDir()));
 		foreach ($rii as $file) {
 			$name = substr($file->getPathname(), $trim);
 			if (!$file->isDir() && !$this->isIgnoreFile($name)) {

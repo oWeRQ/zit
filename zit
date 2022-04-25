@@ -5,8 +5,12 @@ namespace Zit;
 
 require __DIR__.'/src/Zit.php';
 require __DIR__.'/src/Console.php';
+require __DIR__.'/src/Store.php';
+require __DIR__.'/src/WorkCopy.php';
 
-$zit = Zit::path(getcwd());
+$workCopy = WorkCopy::path(getcwd());
+$store = new Store($workCopy->getStoreFile());
+$zit = new Zit($store, $workCopy);
 $console = new Console($zit);
 if ($argc === 1) {
 	$console->usage();
