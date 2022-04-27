@@ -91,7 +91,7 @@ class Zit
 
 		return [
 			'commit' => $this->store->readHeadHash(),
-			'ref' => $this->store->readHeadRef(),
+			'branch' => $this->store->readHeadBranch(),
 			'deleted' => $deleted,
 			'staged' => $staged,
 			'changed' => $changed,

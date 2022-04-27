@@ -56,14 +56,19 @@ class Store
 		return $commit ? $this->readJson($commit['tree']) : [];
 	}
 
-	public function readHeadRef()
+	protected function readHeadRef()
 	{
 		return $this->readZit('HEAD') ?: $this->branchPath('master');
 	}
 
-	public function writeHeadRef($ref)
+	protected function writeHeadRef($ref)
 	{
 		return $this->writeZit('HEAD', $ref);
+	}
+
+	public function readHeadBranch()
+	{
+		return $this->branchName($this->readHeadRef());
 	}
 
 	public function writeHeadBranch($branch)
@@ -102,12 +107,12 @@ class Store
 		return $branches;
 	}
 
-	public function read($name)
+	protected function read($name)
 	{
 		return $this->zip->getFromName($name);
 	}
 
-	public function write($name, $content)
+	protected function write($name, $content)
 	{
 		return $this->zip->addFromString($name, $content);
 	}
@@ -132,12 +137,12 @@ class Store
 		return $this->writeIndex($name, $this->readObject($hash));
 	}
 
-	public function readZit($name)
+	protected function readZit($name)
 	{
 		return $this->read(".zit/$name");
 	}
 
-	public function writeZit($name, $content)
+	protected function writeZit($name, $content)
 	{
 		return $this->write(".zit/$name", $content);
 	}
@@ -166,7 +171,7 @@ class Store
 		return $this->writeZit($this->objectPath($hash), $content);
 	}
 
-	public function objectPath($hash)
+	protected function objectPath($hash)
 	{
 		return 'objects/'.substr($hash, 0, 2).'/'.substr($hash, 2);
 	}
@@ -181,8 +186,13 @@ class Store
 		return $this->writeZit($this->branchPath($branch), $hash);
 	}
 
-	public function branchPath($branch)
+	protected function branchPath($branch)
 	{
 		return "refs/heads/$branch";
+	}
+
+	protected function branchName($ref)
+	{
+		return preg_replace('/^refs\/heads\//', '', $ref);
 	}
 }
