@@ -19,7 +19,7 @@ class Console
 			if ($values) {
 				if (is_array($values)) {
 					echo "$name:\n";
-					foreach ((array)$values as $value) {
+					foreach (array_filter((array)$values) as $value) {
 						echo "  $value\n";
 					}
 				} else {

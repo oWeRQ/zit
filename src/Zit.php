@@ -103,10 +103,11 @@ class Zit
 	{
 		$commits = [];
 
-		$current = $this->store->readJson($this->store->readHeadHash());
-		while ($current) {
-			$commits[] = $current;
-			$current = $this->store->readJson($current['parents'][0]);
+		$hash = $this->store->readHeadHash();
+		while ($hash) {
+			$commit = $this->store->readJson($hash);
+			$commits[] = ['commit' => $hash] + $commit;
+			$hash = $commit['parents'][0];
 		}
 
 		return $commits;

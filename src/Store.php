@@ -87,7 +87,7 @@ class Store
 		if (!str_starts_with($ref, 'refs/'))
 			return $ref;
 
-		return $this->readZit($ref) ?: sha1('');
+		return $this->readZit($ref);
 	}
 
 	public function writeHeadHash($hash)
