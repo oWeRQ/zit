@@ -17,33 +17,29 @@ class Diff
 		for ($i = 0; $i < $maxLen - max($oldOffset, $newOffset); $i++) {
 			$oldIdx = $i + $oldOffset;
 			$newIdx = $i + $newOffset;
-			$oldLine = $old[$oldIdx] ?? null;
-			$newLine = $new[$newIdx] ?? null;
+			$oldLine = $old[$oldIdx];
+			$newLine = $new[$newIdx];
 			if ($oldLine !== null && $newLine !== null && $oldLine !== $newLine) {
 				for ($j = 0; $j < $maxLen - $i; $j++) {
-					$oldDist = array_search($new[$newIdx + $j] ?? null, array_slice($old, $oldIdx + $j), true);
-					$newDist = array_search($old[$oldIdx + $j] ?? null, array_slice($new, $newIdx + $j), true);
+					$oldDist = isset($new[$newIdx + $j]) ? array_search($new[$newIdx + $j], array_slice($old, $oldIdx + $j), true) : false;
+					$newDist = isset($old[$oldIdx + $j]) ? array_search($old[$oldIdx + $j], array_slice($new, $newIdx + $j), true) : false;
 
-					if ($oldDist || $newDist) {
+					if ($oldDist !== false || $newDist !== false) {
 						$oldDist += $j;
 						$newDist += $j;
 
-						if ($oldDist) {
-							for ($k = 0; $k < $oldDist; $k++) {
-								$lines[] = [
-									'old' => $old[$oldIdx + $k] ?? null,
-									'new' => null,
-								];
-							}
+						for ($k = 0; $k < $oldDist; $k++) {
+							$lines[] = [
+								'old' => $old[$oldIdx + $k],
+								'new' => null,
+							];
 						}
 
-						if ($newDist) {
-							for ($k = 0; $k < $newDist; $k++) {
-								$lines[] = [
-									'old' => null,
-									'new' => $new[$newIdx + $k] ?? null,
-								];
-							}
+						for ($k = 0; $k < $newDist; $k++) {
+							$lines[] = [
+								'old' => null,
+								'new' => $new[$newIdx + $k],
+							];
 						}
 
 						$oldOffset += $oldDist - 1;
