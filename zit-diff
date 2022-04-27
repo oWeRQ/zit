@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+
+namespace Zit;
+
+require __DIR__.'/src/Diff.php';
+
+$diff = new Diff;
+$old = file($argv[1], FILE_IGNORE_NEW_LINES);
+$new = file($argv[2], FILE_IGNORE_NEW_LINES);
+$lines = $diff->compare($old, $new);
+$diff->print($lines);
