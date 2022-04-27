@@ -21,10 +21,13 @@ class Diff
 			$newLine = $new[$newIdx] ?? null;
 			if ($oldLine !== null && $newLine !== null && $oldLine !== $newLine) {
 				for ($j = 0; $j < $maxLen - $i; $j++) {
-					$oldDist = array_search($new[$newIdx + $j] ?? null, array_slice($old, $oldIdx + $j), true) + $j;
-					$newDist = array_search($old[$oldIdx + $j] ?? null, array_slice($new, $newIdx + $j), true) + $j;
+					$oldDist = array_search($new[$newIdx + $j] ?? null, array_slice($old, $oldIdx + $j), true);
+					$newDist = array_search($old[$oldIdx + $j] ?? null, array_slice($new, $newIdx + $j), true);
 
 					if ($oldDist || $newDist) {
+						$oldDist += $j;
+						$newDist += $j;
+
 						if ($oldDist) {
 							for ($k = 0; $k < $oldDist; $k++) {
 								$lines[] = [
@@ -48,6 +51,13 @@ class Diff
 
 						break;
 					}
+				}
+
+				if ($j === $maxLen - $i) {
+					$lines[] = [
+						'old' => $oldLine,
+						'new' => $newLine,
+					];
 				}
 			} else {
 				$lines[] = [
