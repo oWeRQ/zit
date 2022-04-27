@@ -39,7 +39,7 @@ class Console
 	 */
 	public function usage()
 	{
-		echo "Usage: zit <command> [args...]\n";
+		echo "Usage: zit <command> [args]...\n";
 		echo "Commands:\n";
 
 		$methods = (new \ReflectionClass($this))->getMethods(\ReflectionMethod::IS_PUBLIC);
