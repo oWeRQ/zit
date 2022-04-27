@@ -18,9 +18,14 @@ class Store
 
 	public function __destruct()
 	{
-		if ($this->zip->filename) {
+		if ($this->isExist()) {
 			$this->zip->close();
 		}
+	}
+
+	public function isExist()
+	{
+		return (bool)$this->zip->filename;
 	}
 
 	public function reload()
@@ -109,6 +114,10 @@ class Store
 
 	protected function read($name)
 	{
+		if (!$this->isExist()) {
+			throw new \Exception('Store not found');
+		}
+
 		return $this->zip->getFromName($name);
 	}
 

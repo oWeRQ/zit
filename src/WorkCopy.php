@@ -26,8 +26,8 @@ class WorkCopy
 
 	public function __construct($storeFile, $currentDir = null)
 	{
-		$this->storeFile = realpath($storeFile);
-		$this->workDir = dirname($storeFile);
+		$this->storeFile = $storeFile;
+		$this->workDir = realpath(dirname($storeFile));
 		$this->currentDir = $currentDir ?: $this->workDir;
 	}
 

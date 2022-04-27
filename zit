@@ -8,13 +8,17 @@ require __DIR__.'/src/Console.php';
 require __DIR__.'/src/Store.php';
 require __DIR__.'/src/WorkCopy.php';
 
-$author = getenv('USER').'@'.gethostname();
-$workCopy = WorkCopy::path(getcwd());
-$store = new Store($workCopy->getStoreFile());
-$zit = new Zit($store, $workCopy);
-$console = new Console($zit, $author);
-if ($argc === 1) {
-	$console->usage();
-} else {
-	call_user_func_array([$console, $argv[1]], array_slice($argv, 2));
+try {
+	$author = getenv('USER').'@'.gethostname();
+	$workCopy = WorkCopy::path(getcwd());
+	$store = new Store($workCopy->getStoreFile());
+	$zit = new Zit($store, $workCopy);
+	$console = new Console($zit, $author);
+	if ($argc === 1) {
+		$console->usage();
+	} else {
+		call_user_func_array([$console, $argv[1]], array_slice($argv, 2));
+	}
+} catch (\Exception $e) {
+	echo $e->getMessage()."\n";
 }
