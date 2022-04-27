@@ -37,16 +37,22 @@ class Store
 	public function init()
 	{
 		$this->zip->open($this->storeFile, ZipArchive::CREATE);
-		$this->zip->addEmptyDir('.zit');
+		$this->zip->addEmptyDir($this->zitPath());
+	}
+
+	protected function zitPath($name = '')
+	{
+		return ".zit/$name";
 	}
 
 	public function indexTree()
 	{
 		$files = [];
 
+		$zitPath = $this->zitPath();
 		for ($i = 0; $i < $this->zip->numFiles; $i++) {
 			$name = $this->zip->getNameIndex($i);
-			if (substr($name, -1) !== '/' && !str_starts_with($name, '.zit/')) {
+			if (substr($name, -1) !== '/' && !str_starts_with($name, $zitPath)) {
 				$files[$name] = sha1($this->zip->getFromName($name));
 			}
 		}
@@ -100,7 +106,7 @@ class Store
 	{
 		$branches = [];
 
-		$dir = '.zit/refs/heads/';
+		$dir = $this->zitPath('refs/heads/');
 		$trim = strlen($dir);
 		for ($i = 0; $i < $this->zip->numFiles; $i++) {
 			$name = $this->zip->getNameIndex($i);
@@ -148,12 +154,12 @@ class Store
 
 	protected function readZit($name)
 	{
-		return $this->read(".zit/$name");
+		return $this->read($this->zitPath($name));
 	}
 
 	protected function writeZit($name, $content)
 	{
-		return $this->write(".zit/$name", $content);
+		return $this->write($this->zitPath($name), $content);
 	}
 
 	public function readJson($hash)
