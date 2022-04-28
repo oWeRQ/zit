@@ -96,8 +96,8 @@ class Console
 		$diff = new Diff;
 		$diffFiles = $this->zit->diff($files);
 		foreach ($diffFiles as $diffFile) {
-			$old = preg_split('/[\r\n]+/', $diffFile['old']);
-			$new = preg_split('/[\r\n]+/', $diffFile['new']);
+			$old = preg_split('/\r?\n/', $diffFile['old']);
+			$new = preg_split('/\r?\n/', $diffFile['new']);
 			$lines = $diff->compare($old, $new);
 			echo "@".$diffFile['name']."\n".$diff->toString($lines);
 		}
