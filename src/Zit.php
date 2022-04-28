@@ -180,4 +180,29 @@ class Zit
 			}
 		}
 	}
+
+	public function diff(array $paths)
+	{
+		$diff = [];
+
+		if (count($paths) === 0) {
+			$paths = ['.'];
+		}
+
+		$indexTree = $this->store->indexTree();
+		foreach ($paths as $path) {
+			$path = $this->workCopy->normalizePath($path);
+			foreach ($this->workCopy->workTree($path) as $name => $hash) {
+				if (array_key_exists($name, $indexTree) && $indexTree[$name] !== $hash) {
+					$diff[] = [
+						'name' => $name,
+						'old' => $this->store->readObject($indexTree[$name]),
+						'new' => $this->workCopy->read($name),
+					];
+				}
+			}
+		}
+
+		return $diff;
+	}
 }

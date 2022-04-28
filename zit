@@ -5,6 +5,7 @@ namespace Zit;
 
 require __DIR__.'/src/Zit.php';
 require __DIR__.'/src/Console.php';
+require __DIR__.'/src/Diff.php';
 require __DIR__.'/src/Store.php';
 require __DIR__.'/src/WorkCopy.php';
 

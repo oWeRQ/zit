@@ -66,21 +66,30 @@ class Diff
 		return $lines;
 	}
 
-	public function print(array $lines)
+	public function toString(array $lines)
 	{
+		$str = '';
+
 		foreach ($lines as $line) {
 			$old = $line['old'];
 			$new = $line['new'];
 			if ($old === $new) {
-				echo " $new\n";
+				$str .= " $new\n";
 			} else {
 				if ($old !== null) {
-					echo "-$old\n";
+					$str .= "-$old\n";
 				}
 				if ($new !== null) {
-					echo "+$new\n";
+					$str .= "+$new\n";
 				}
 			}
 		}
+
+		return $str;
+	}
+
+	public function print(array $lines)
+	{
+		echo $this->toString($lines);
 	}
 }
