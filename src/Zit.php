@@ -106,6 +106,9 @@ class Zit
 		$hash = $this->store->readHeadHash();
 		while ($hash) {
 			$commit = $this->store->readJson($hash);
+			if (!$commit)
+				break;
+
 			$commits[] = ['commit' => $hash] + $commit;
 			$hash = $commit['parents'][0];
 		}
