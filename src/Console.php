@@ -144,9 +144,9 @@ class Console
 	/**
 	 * Switch branches
 	 */
-	public function switch($branch)
+	public function switch($branch, $commit = null)
 	{
-		$this->zit->switch($branch);
+		$this->zit->switch($branch, $commit);
 	}
 
 	/**

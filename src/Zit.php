@@ -147,9 +147,11 @@ class Zit
 		$this->store->writeHeadBranch($branch);
 	}
 
-	public function switch($branch)
+	public function switch($branch, $commitHash = null)
 	{
-		$commitHash = $this->store->readBranch($branch);
+		if (!$commitHash) {
+			$commitHash = $this->store->readBranch($branch);
+		}
 		$commit = $this->store->readJson($commitHash);
 		$commitTree = $this->store->readJson($commit['tree']);
 		$workTree = $this->workCopy->workTree();
@@ -161,6 +163,7 @@ class Zit
 			}
 		}
 
+		$this->store->writeBranch($branch, $commitHash);
 		$this->store->writeHeadBranch($branch);
 	}
 
