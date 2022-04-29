@@ -66,6 +66,38 @@ class Diff
 		return $lines;
 	}
 
+	public function apply(array $old, array $lines)
+	{
+		$new = [];
+
+		$offset = 0;
+		foreach ($lines as $i => $line) {
+			$oldLine = $old[$i + $offset];
+			if ($line['old'] === null || $line['old'] === $oldLine || $line['new'] === $oldLine) {
+				if ($line['old'] === null) {
+					$offset--;
+				}
+
+				if ($line['new'] !== null) {
+					$new[] = $line['new'];
+				}
+			}
+		}
+
+		for ($j = $i; $j < count($old); $j++) {
+			$new[] = $old[$j];
+		}
+
+		return $new;
+	}
+
+	public function merge(array $common, array $a, array $b)
+	{
+		$aDiff = $this->compare($common, $a);
+		$bDiff = $this->compare($common, $b);
+		return $this->apply($this->apply($common, $aDiff), $bDiff);
+	}
+
 	public function toString(array $lines)
 	{
 		$str = '';

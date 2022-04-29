@@ -150,6 +150,14 @@ class Console
 	}
 
 	/**
+	 * Join two or more development histories together
+	 */
+	public function merge($branch)
+	{
+		$this->zit->merge($branch);
+	}
+
+	/**
 	 * Reset current HEAD to the specified state
 	 */
 	public function reset()

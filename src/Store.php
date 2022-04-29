@@ -61,10 +61,15 @@ class Store
 		return $files;
 	}
 
+	public function commitTree($hash)
+	{
+		$commit = $this->readJson($hash);
+		return $commit ? $this->readJson($commit['tree']) : [];
+	}
+
 	public function headTree()
 	{
-		$commit = $this->readJson($this->readHeadHash());
-		return $commit ? $this->readJson($commit['tree']) : [];
+		return $this->commitTree($this->readHeadHash());
 	}
 
 	protected function readHeadRef()

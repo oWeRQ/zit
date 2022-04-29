@@ -99,11 +99,13 @@ class Zit
 		];
 	}
 
-	public function log()
+	public function log($hash = null)
 	{
 		$commits = [];
 
-		$hash = $this->store->readHeadHash();
+		if (!$hash) {
+			$hash = $this->store->readHeadHash();
+		}
 		while ($hash) {
 			$commit = $this->store->readJson($hash);
 			if (!$commit)
@@ -165,6 +167,39 @@ class Zit
 
 		$this->store->writeBranch($branch, $commitHash);
 		$this->store->writeHeadBranch($branch);
+	}
+
+	public function merge($branch)
+	{
+		$headHash = $this->store->readHeadHash();
+		$mergeHash = $this->store->readBranch($branch);
+		$commonHash = $this->commonCommit($headHash, $mergeHash);
+		$this->output("common commit $commonHash");
+
+		$headTree = $this->store->headTree();
+		$mergeTree = $this->store->commitTree($mergeHash);
+		$commonTree = $this->store->commitTree($commonHash);
+
+		$headChanged = array_diff_assoc($headTree, $commonTree);
+		$mergeChanged = array_diff_assoc($mergeTree, $commonTree);
+		$conflictNames = array_keys(array_intersect_key($headChanged, $mergeChanged));
+
+		foreach ($conflictNames as $name) {
+			$head = preg_split('/\n/', $this->store->readObject($headTree[$name]));
+			$merge = preg_split('/\n/', $this->store->readObject($mergeTree[$name]));
+			$common = preg_split('/\n/', $this->store->readObject($commonTree[$name]));
+			$merged = implode("\n", (new Diff)->merge($common, $head, $merge));
+
+			$this->output("@$name\n$merged");
+		}
+	}
+
+	public function commonCommit($a, $b)
+	{
+		$logA = array_column($this->log($a), 'commit');
+		$logB = array_column($this->log($b), 'commit');
+		$logCommon = array_intersect($logA, $logB);
+		return reset($logCommon);
 	}
 
 	public function reset()
