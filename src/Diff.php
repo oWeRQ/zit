@@ -52,10 +52,19 @@ class Diff
 				}
 
 				if ($offset === $maxOffset) {
-					$lines[] = [
-						'old' => $old[$oldIdx++],
-						'new' => $new[$newIdx++],
-					];
+					while ($oldIdx < $oldLen) {
+						$lines[] = [
+							'old' => $old[$oldIdx++],
+							'new' => null,
+						];
+					}
+
+					while ($newIdx < $newLen) {
+						$lines[] = [
+							'old' => null,
+							'new' => $new[$newIdx++],
+						];
+					}
 				}
 			}
 		}
