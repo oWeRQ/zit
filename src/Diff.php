@@ -10,56 +10,53 @@ class Diff
 
 		$oldLen = count($old);
 		$newLen = count($new);
-		$maxLen = max($oldLen, $newLen);
-		$oldOffset = 0;
-		$newOffset = 0;
+		$oldIdx = 0;
+		$newIdx = 0;
 
-		for ($i = 0; $i < $maxLen - max($oldOffset, $newOffset); $i++) {
-			$oldIdx = $i + $oldOffset;
-			$newIdx = $i + $newOffset;
-			$oldLine = $old[$oldIdx];
-			$newLine = $new[$newIdx];
-			if ($oldLine !== null && $newLine !== null && $oldLine !== $newLine) {
-				for ($j = 0; $j < $maxLen - $i; $j++) {
-					$oldDist = isset($new[$newIdx + $j]) ? array_search($new[$newIdx + $j], array_slice($old, $oldIdx + $j), true) : false;
-					$newDist = isset($old[$oldIdx + $j]) ? array_search($old[$oldIdx + $j], array_slice($new, $newIdx + $j), true) : false;
+		while ($oldIdx < $oldLen || $newIdx < $newLen) {
+			if (!array_key_exists($oldIdx, $old) || !array_key_exists($newIdx, $new) || $old[$oldIdx] === $new[$newIdx]) {
+				$lines[] = [
+					'old' => @$old[$oldIdx++],
+					'new' => @$new[$newIdx++],
+				];
+			} else {
+				$maxOffset = max($oldLen - $oldIdx, $newLen - $newIdx);
+				for ($offset = 1; $offset < $maxOffset; $offset++) {
+					$oldOffset = array_search(@$new[$newIdx + $offset], array_slice($old, $oldIdx, $offset + 1), true);
+					$newOffset = array_search(@$old[$oldIdx + $offset], array_slice($new, $newIdx, $offset + 1), true);
+					if ($oldOffset !== false || $newOffset !== false) {
+						if ($oldOffset === false) {
+							$oldOffset = $offset;
+						}
 
-					if ($oldDist !== false || $newDist !== false) {
-						$oldDist += $j;
-						$newDist += $j;
+						if ($newOffset === false) {
+							$newOffset = $offset;
+						}
 
-						for ($k = 0; $k < $oldDist; $k++) {
+						for ($i = 0; $i < $oldOffset; $i++) {
 							$lines[] = [
-								'old' => $old[$oldIdx + $k],
+								'old' => $old[$oldIdx++],
 								'new' => null,
 							];
 						}
 
-						for ($k = 0; $k < $newDist; $k++) {
+						for ($i = 0; $i < $newOffset; $i++) {
 							$lines[] = [
 								'old' => null,
-								'new' => $new[$newIdx + $k],
+								'new' => $new[$newIdx++],
 							];
 						}
-
-						$oldOffset += $oldDist - 1;
-						$newOffset += $newDist - 1;
 
 						break;
 					}
 				}
 
-				if ($j === $maxLen - $i) {
+				if ($offset === $maxOffset) {
 					$lines[] = [
-						'old' => $oldLine,
-						'new' => $newLine,
+						'old' => $old[$oldIdx++],
+						'new' => $new[$newIdx++],
 					];
 				}
-			} else {
-				$lines[] = [
-					'old' => $oldLine,
-					'new' => $newLine,
-				];
 			}
 		}
 
